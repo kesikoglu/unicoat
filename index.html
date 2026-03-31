@@ -1,916 +1,738 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Element Toz Boya - 3D Renk Stüdyosu Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background: #ffffff;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            height: 100vh;
-            width: 100vw;
-        }
-        
-        #canvas-container { flex: 1; height: 100%; position: relative; }
-        
-        .glass-panel {
-            background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAL Renk Görüntüleyici</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .color-swatch {
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-        .color-swatch:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            z-index: 10;
-        }
-        .color-swatch.active {
-            border: 2px solid #3b82f6;
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-            z-index: 11;
-        }
-        
-        .search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+  /* AÇIK TEMA RENK PALETİ */
+  :root {
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --surface2: #f1f3f5;
+    --border: #dee2e6;
+    --text: #212529;
+    --muted: #6c757d;
+    --accent: #b08d55;
+    --accent2: #8f7a5e;
+  }
 
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            color: white;
-            transition: opacity 0.5s ease-out;
-        }
+  html, body { height: 100%; }
 
-        .metallic-badge {
-            position: absolute;
-            top: -2px; right: -2px;
-            width: 10px; height: 10px;
-            background: linear-gradient(135deg, #fff, #888);
-            border-radius: 50%;
-            border: 1px solid #333;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
-        
-        #error-msg {
-            color: #ff6b6b;
-            margin-top: 10px;
-            font-size: 14px;
-            text-align: center;
-            max-width: 80%;
-        }
-    </style>
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(248, 249, 250, 0.93); /* Açık tema başlık arka planı */
+    backdrop-filter: blur(24px);
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 5px;
+    color: var(--accent);
+  }
+  .logo span {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 3px;
+    font-family: 'DM Sans';
+    display: block;
+    margin-top: -3px;
+    font-weight: 300;
+  }
+  .header-right { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 62px);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .sidebar-top { padding: 18px 18px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .section-label {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px; font-weight: 400;
+  }
+  .search-box {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 13px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  /* ── FINISH ── */
+  .finish-section { padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .finish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .finish-btn {
+    padding: 9px 8px; border-radius: 7px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted); font-family: 'DM Sans';
+    font-size: 11px; cursor: pointer; transition: all 0.18s; letter-spacing: 1px;
+    text-align: center; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .finish-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .finish-btn.active { background: var(--accent); border-color: var(--accent); color: #ffffff; font-weight: 500; }
+  .fdot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    background: currentColor; display: inline-block;
+  }
+
+  /* ── COLOR LIST ── */
+  .color-groups { overflow-y: auto; flex: 1; padding: 4px 8px 16px; }
+  .color-groups::-webkit-scrollbar { width: 3px; }
+  .color-groups::-webkit-scrollbar-track { background: transparent; }
+  .color-groups::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .group-title {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); padding: 14px 6px 6px;
+  }
+  .color-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 4px; margin-bottom: 2px; }
+  .color-chip {
+    aspect-ratio: 1; border-radius: 5px; cursor: pointer; position: relative;
+    transition: transform 0.12s, box-shadow 0.12s; border: 2px solid transparent;
+  }
+  .color-chip:hover { transform: scale(1.16); z-index: 1; }
+  .color-chip.selected {
+    border-color: var(--text); transform: scale(1.2); z-index: 2;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.2);
+  }
+  .chip-tooltip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 5px;
+    font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity 0.12s; color: var(--text); z-index: 20; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .color-chip:hover .chip-tooltip { opacity: 1; }
+
+  /* ── RIGHT PANEL ── */
+  .preview-area { display: flex; flex-direction: column; overflow: hidden; }
+  .preview-header {
+    padding: 22px 36px 18px; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: flex-end; justify-content: space-between; flex-shrink: 0;
+  }
+  .ral-code-big {
+    font-family: 'Bebas Neue', sans-serif; font-size: 54px; line-height: 1; transition: color 0.35s;
+  }
+  .color-name-line { font-size: 13px; color: var(--muted); margin-top: 2px; font-style: italic; font-weight: 300; }
+  .hex-block { text-align: right; }
+  .hex-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: var(--text); }
+  .hex-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-top: 2px; text-transform: uppercase; }
+  .finish-badge { font-size: 10px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-top: 6px; }
+
+  /* ── PREVIEWS ── */
+  .previews { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; }
+  .flat-preview { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .preview-label {
+    padding: 12px 24px; font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface);
+  }
+  .flat-surface-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #e9ecef; padding: 28px; /* Açık arka plan */
+  }
+  .flat-surface {
+    width: 250px; height: 186px; border-radius: 14px; position: relative;
+    overflow: hidden; transition: background-color 0.35s;
+  }
+  .flat-surface::after {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    pointer-events: none; transition: opacity 0.35s;
+  }
+  /* Glossy */
+  .flat-surface.f-glossy {
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.42), inset 0 -1px 0 rgba(0,0,0,0.15);
+  }
+  .flat-surface.f-glossy::after {
+    background: linear-gradient(145deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.0) 52%);
+  }
+  /* Semi-glossy */
+  .flat-surface.f-semi-glossy {
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.22);
+  }
+  .flat-surface.f-semi-glossy::after {
+    background: linear-gradient(145deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.0) 58%);
+  }
+  /* Semi-matte */
+  .flat-surface.f-semi-matte {
+    box-shadow: 0 10px 36px rgba(0,0,0,0.15);
+  }
+  .flat-surface.f-semi-matte::after {
+    background: linear-gradient(145deg, rgba(255,255,255,0.10) 0%, transparent 48%);
+  }
+  /* Matte */
+  .flat-surface.f-matte {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    filter: brightness(0.97);
+  }
+  .flat-surface.f-matte::after { background: none; }
+
+  /* ── CANVAS ── */
+  .canvas-preview { display: flex; flex-direction: column; overflow: hidden; }
+  .canvas-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #e9ecef; position: relative; /* Açık arka plan */
+  }
+  canvas#ralCanvas { display: block; cursor: grab; }
+  canvas#ralCanvas:active { cursor: grabbing; }
+  .drag-hint {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    white-space: nowrap; pointer-events: none;
+  }
+</style>
 </head>
-<body class="text-gray-800 flex flex-col md:flex-row">
+<body>
 
-    <div id="loader">
-        <div class="flex flex-col items-center">
-            <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <span class="text-lg font-light tracking-widest text-gray-600">ELEMENT <span class="font-bold text-gray-900">3D</span> YÜKLENİYOR...</span>
-            <div id="error-msg"></div>
-        </div>
+<header>
+  <div class="logo">RAL VIEWER <span>Renk & Yüzey Görüntüleyici</span></div>
+  <div class="header-right">360° Canlı Önizleme</div>
+</header>
+
+<div class="main-grid">
+
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="section-label">Renk Ara</div>
+      <input class="search-box" id="searchInput" type="text" placeholder="RAL kodu veya isim...">
     </div>
 
-    <div class="glass-panel w-full md:w-96 flex-shrink-0 shadow-2xl z-10 relative overflow-hidden">
-        
-        <div class="p-6 border-b border-gray-200 flex flex-col gap-2 flex-shrink-0">
-            <div class="flex justify-center">
-<img src="unicoats.png" alt="Unicoats Logo" class="h-16 object-contain">
+    <div class="finish-section">
+      <div class="section-label">Yüzey Tipi</div>
+      <div class="finish-grid">
+        <button class="finish-btn active" id="btn-glossy"      onclick="setFinish('glossy')">
+          <span class="fdot" style="background:rgba(255,255,255,0.95);box-shadow:0 0 5px rgba(0,0,0,0.3)"></span>Parlak
+        </button>
+        <button class="finish-btn" id="btn-semi-glossy" onclick="setFinish('semi-glossy')">
+          <span class="fdot" style="background:rgba(255,255,255,0.55)"></span>Yarı-Parlak
+        </button>
+        <button class="finish-btn" id="btn-semi-matte"  onclick="setFinish('semi-matte')">
+          <span class="fdot" style="background:rgba(255,255,255,0.22)"></span>Yarı-Mat
+        </button>
+        <button class="finish-btn" id="btn-matte"       onclick="setFinish('matte')">
+          <span class="fdot" style="background:transparent;border:1px solid rgba(0,0,0,0.3)"></span>Mat
+        </button>
+      </div>
+    </div>
+
+    <div class="color-groups" id="colorGroups"></div>
+  </aside>
+
+  <main class="preview-area">
+    <div class="preview-header">
+      <div>
+        <div class="ral-code-big" id="bigCode">RAL 2004</div>
+        <div class="color-name-line" id="bigName">Pure Orange / Saf Turuncu</div>
+      </div>
+      <div class="hex-block">
+        <div class="hex-val" id="hexVal">#D45F3C</div>
+        <div class="hex-label">HEX KODU</div>
+        <div class="finish-badge" id="finishBadge">✦ Parlak</div>
+      </div>
+    </div>
+
+    <div class="previews">
+      <div class="flat-preview">
+        <div class="preview-label">▣ &nbsp;Düz Yüzey</div>
+        <div class="flat-surface-wrap">
+          <div class="flat-surface f-glossy" id="flatSurface"></div>
+        </div>
+      </div>
+
+      <div class="canvas-preview">
+        <div class="preview-label">◎ &nbsp;360° Küre Önizleme</div>
+        <div class="canvas-wrap">
+          <canvas id="ralCanvas" width="460" height="400"></canvas>
+          <div class="drag-hint">⟳ &nbsp;Sürükleyerek döndür</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
 </div>
-        </div>
-
-        <div class="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-            <div class="relative">
-                <svg class="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search-input" placeholder="RAL kodu veya renk ara..." class="search-input w-full bg-gray-100 text-gray-800 text-sm rounded-lg pl-9 pr-4 py-2 border border-gray-300 transition-all">
-            </div>
-        </div>
-
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6" id="ui-content">
-            
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden flex-shrink-0">
-                <div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full pointer-events-none"></div>
-                <p class="text-xs text-gray-500 mb-2 font-semibold tracking-wider">GEÇERLİ SEÇİM</p>
-                <div class="flex items-center gap-4">
-                    <div id="current-color-preview" class="w-14 h-14 rounded-lg shadow border border-gray-300" style="background-color: #0A0A0A;"></div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 id="current-color-code" class="text-2xl font-bold text-gray-900">RAL 9005</h3>
-                            <span id="metallic-tag" class="hidden px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] rounded uppercase font-bold border border-gray-300">Metalik</span>
-                        </div>
-                        <p id="current-color-name" class="text-sm text-gray-500">Derin Siyah</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-shrink-0">
-                <h3 class="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wider">Parlaklık Seviyesi</h3>
-                <div class="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200 mb-4">
-                    <button type="button" class="finish-btn text-[11px] py-1.5 px-1 rounded transition font-medium text-center" data-finish="parlak" style="background-color:#2563eb;color:#ffffff;box-shadow:0 2px 8px rgba(59,130,246,0.5);font-weight:600;">Parlak</button>
-                    <button type="button" class="finish-btn text-[11px] py-1.5 px-1 rounded transition font-medium text-center" data-finish="yariparlak" style="color:#6b7280;">Yarı Parl.</button>
-                    <button type="button" class="finish-btn text-[11px] py-1.5 px-1 rounded transition font-medium text-center" data-finish="yarimat" style="color:#6b7280;">Yarı Mat</button>
-                    <button type="button" class="finish-btn text-[11px] py-1.5 px-1 rounded transition font-medium text-center" data-finish="mat" style="color:#6b7280;">Mat</button>
-                </div>
-
-            </div>
-
-
-            <div class="flex-1 min-h-[200px]">
-                <h3 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Element RAL Kataloğu</h3>
-                <div id="color-categories" class="flex flex-col gap-2 pb-4"></div>
-                <div id="no-results" class="hidden text-center text-gray-500 py-4 text-sm">Arama sonucu bulunamadı.</div>
-            </div>
-
-        </div>
-        
-        <div class="p-3 bg-gray-50 border-t border-gray-200 text-[11px] text-gray-500 flex justify-between items-center flex-shrink-0">
-            <span>🖱️ Döndür & Yakınlaştır</span>
-            <button type="button" id="reset-cam" class="hover:text-gray-900 transition bg-white px-2 py-1 rounded border border-gray-300">Sıfırla</button>
-        </div>
-    </div>
-
-    <div id="canvas-container" class="flex-1 w-full h-[50vh] md:h-full relative cursor-grab active:cursor-grabbing bg-white">
-
-        <!-- Sol üst: RAL kodu + renk adı -->
-        <div class="absolute top-8 left-8 z-20 pointer-events-none select-none">
-            <h2 id="overlay-code" class="text-5xl font-black tracking-tight leading-none" style="color:#1a1a1a; font-family:'Inter',sans-serif;">RAL 9005</h2>
-            <p id="overlay-name" class="text-sm text-gray-400 font-light italic mt-1 tracking-wide">Derin Siyah</p>
-        </div>
-
-        <!-- Sağ üst: Parlaklık -->
-        <div class="absolute top-8 right-8 z-20 pointer-events-none select-none text-right">
-            <div class="flex items-center justify-end gap-1">
-                <span class="text-[10px] text-orange-400 font-bold">✦</span>
-                <span id="overlay-gloss" class="text-[11px] font-semibold text-orange-400 tracking-widest uppercase">PARLAK</span>
-            </div>
-        </div>
-
-        <!-- Arka plan watermark -->
-        <div class="absolute bottom-8 right-8 opacity-10 pointer-events-none text-right z-0">
-            <h1 class="text-4xl font-black tracking-widest text-gray-500">ELEMENT</h1>
-            <p class="text-sm text-gray-500 tracking-widest">POWDER COATINGS</p>
-        </div>
-    </div>
-
-    <script>
-        try {
-            const ralData = [
-                {
-                    category: "1000 – Sarı Tonlar",
-                    colors: [
-                        { code: "RAL 1000", name: "Yeşilimsi Bej", hex: "#BEBD7F" },
-                        { code: "RAL 1001", name: "Bej", hex: "#C2B078" },
-                        { code: "RAL 1002", name: "Kum Sarısı", hex: "#C6A664" },
-                        { code: "RAL 1003", name: "Sinyal Sarısı", hex: "#E5BE01" },
-                        { code: "RAL 1004", name: "Altın Sarısı", hex: "#CDA434" },
-                        { code: "RAL 1005", name: "Bal Sarısı", hex: "#A98307" },
-                        { code: "RAL 1006", name: "Mısır Sarısı", hex: "#E4A010" },
-                        { code: "RAL 1007", name: "Nergis Sarısı", hex: "#DC9D00" },
-                        { code: "RAL 1011", name: "Kahverengi Bej", hex: "#8A6642" },
-                        { code: "RAL 1012", name: "Limon Sarısı", hex: "#C7B446" },
-                        { code: "RAL 1013", name: "İnci Beyazı", hex: "#EAE6CA" },
-                        { code: "RAL 1014", name: "Fildişi", hex: "#E1CC4F" },
-                        { code: "RAL 1015", name: "Açık Fildişi", hex: "#E6D690" },
-                        { code: "RAL 1016", name: "Kükürt Sarısı", hex: "#EDFF21" },
-                        { code: "RAL 1017", name: "Safran Sarısı", hex: "#F5D033" },
-                        { code: "RAL 1018", name: "Çinko Sarısı", hex: "#F8F32B" },
-                        { code: "RAL 1019", name: "Gri Bej", hex: "#9E9764" },
-                        { code: "RAL 1020", name: "Zeytin Sarısı", hex: "#999950" },
-                        { code: "RAL 1021", name: "Kolza Sarısı", hex: "#F3DA0B" },
-                        { code: "RAL 1023", name: "Trafik Sarısı", hex: "#FAD201" },
-                        { code: "RAL 1024", name: "Okr Sarısı", hex: "#AEA04B" },
-                        { code: "RAL 1026", name: "Parlak Sarı", hex: "#FFFF00" },
-                        { code: "RAL 1027", name: "Köri", hex: "#9D9101" },
-                        { code: "RAL 1028", name: "Kavun Sarısı", hex: "#F4A900" },
-                        { code: "RAL 1032", name: "Katırtırnağı Sarısı", hex: "#D6AE01" },
-                        { code: "RAL 1033", name: "Yıldız Çiçeği Sarısı", hex: "#F3A505" },
-                        { code: "RAL 1034", name: "Pastel Sarı", hex: "#EFA94A" }
-                    ]
-                },
-                {
-                    category: "2000 – Turuncu Tonlar",
-                    colors: [
-                        { code: "RAL 2000", name: "Sarımsı Turuncu", hex: "#DD7907" },
-                        { code: "RAL 2001", name: "Kırmızımsı Turuncu", hex: "#BE4E27" },
-                        { code: "RAL 2002", name: "Cinnabar", hex: "#CB2821" },
-                        { code: "RAL 2003", name: "Pastel Turuncu", hex: "#FF7514" },
-                        { code: "RAL 2004", name: "Saf Turuncu", hex: "#D45F3C" },
-                        { code: "RAL 2007", name: "Parlak Turuncu", hex: "#F77F00" },
-                        { code: "RAL 2008", name: "Açık Kırmızı Turuncu", hex: "#E55137" },
-                        { code: "RAL 2009", name: "Trafik Turuncusu", hex: "#E05929" },
-                        { code: "RAL 2010", name: "Sinyal Turuncusu", hex: "#D4652F" },
-                        { code: "RAL 2011", name: "Derin Turuncu", hex: "#EC7C26" },
-                        { code: "RAL 2012", name: "Somon Turuncusu", hex: "#DB6A50" }
-                    ]
-                },
-                {
-                    category: "3000 – Kırmızı Tonlar",
-                    colors: [
-                        { code: "RAL 3000", name: "Alev Kırmızısı", hex: "#AF2B1E" },
-                        { code: "RAL 3001", name: "Sinyal Kırmızısı", hex: "#A52019" },
-                        { code: "RAL 3002", name: "Karmin Kırmızısı", hex: "#A2231D" },
-                        { code: "RAL 3003", name: "Yakut Kırmızısı", hex: "#9B111E" },
-                        { code: "RAL 3004", name: "Mor Kırmızı", hex: "#75151E" },
-                        { code: "RAL 3005", name: "Şarap Kırmızısı", hex: "#5E2129" },
-                        { code: "RAL 3007", name: "Siyah Kırmızı", hex: "#412227" },
-                        { code: "RAL 3009", name: "Oksit Kırmızısı", hex: "#642424" },
-                        { code: "RAL 3011", name: "Kahverengi Kırmızı", hex: "#781F19" },
-                        { code: "RAL 3012", name: "Bej Kırmızı", hex: "#C1876B" },
-                        { code: "RAL 3013", name: "Domates Kırmızısı", hex: "#A12312" },
-                        { code: "RAL 3014", name: "Antik Pembe", hex: "#D36E70" },
-                        { code: "RAL 3015", name: "Açık Pembe", hex: "#EA899A" },
-                        { code: "RAL 3016", name: "Mercan Kırmızı", hex: "#B32821" },
-                        { code: "RAL 3017", name: "Gül", hex: "#E63244" },
-                        { code: "RAL 3018", name: "Çilek Kırmızısı", hex: "#D53032" },
-                        { code: "RAL 3020", name: "Trafik Kırmızısı", hex: "#CC0605" },
-                        { code: "RAL 3022", name: "Somon Pembesi", hex: "#D95030" },
-                        { code: "RAL 3024", name: "Parlak Kırmızı", hex: "#F80000" },
-                        { code: "RAL 3027", name: "Ahududu Kırmızısı", hex: "#C51D34" },
-                        { code: "RAL 3031", name: "Oryant Kırmızısı", hex: "#AC1922" }
-                    ]
-                },
-                {
-                    category: "4000 – Mor Tonlar",
-                    colors: [
-                        { code: "RAL 4001", name: "Kırmızı Leylak", hex: "#8D4C5B" },
-                        { code: "RAL 4002", name: "Kırmızı Menekşe", hex: "#922B3E" },
-                        { code: "RAL 4003", name: "Funda Moru", hex: "#DE4C8A" },
-                        { code: "RAL 4004", name: "Bordeaux", hex: "#641C34" },
-                        { code: "RAL 4005", name: "Mavi Leylak", hex: "#6C4675" },
-                        { code: "RAL 4006", name: "Trafik Moru", hex: "#A03472" },
-                        { code: "RAL 4007", name: "Mor Menekşe", hex: "#4A192C" },
-                        { code: "RAL 4008", name: "Sinyal Menekşesi", hex: "#924E7D" },
-                        { code: "RAL 4009", name: "Pastel Menekşe", hex: "#A18594" },
-                        { code: "RAL 4010", name: "Telemagenta", hex: "#CF3476" }
-                    ]
-                },
-                {
-                    category: "5000 – Mavi Tonlar",
-                    colors: [
-                        { code: "RAL 5000", name: "Menekşe Mavisi", hex: "#354D73" },
-                        { code: "RAL 5001", name: "Yeşil Mavi", hex: "#1F3438" },
-                        { code: "RAL 5002", name: "Ultramarin Mavi", hex: "#20214F" },
-                        { code: "RAL 5003", name: "Safir Mavi", hex: "#1D1E33" },
-                        { code: "RAL 5004", name: "Siyah Mavi", hex: "#18171C" },
-                        { code: "RAL 5005", name: "Sinyal Mavisi", hex: "#1E2460" },
-                        { code: "RAL 5007", name: "Parlak Mavi", hex: "#3E5F8A" },
-                        { code: "RAL 5008", name: "Gri Mavi", hex: "#26252D" },
-                        { code: "RAL 5009", name: "Azure Mavi", hex: "#025669" },
-                        { code: "RAL 5010", name: "Gentian Mavisi", hex: "#0E4D92" },
-                        { code: "RAL 5011", name: "Çelik Mavisi", hex: "#1B2A4A" },
-                        { code: "RAL 5012", name: "Açık Mavi", hex: "#287CB7" },
-                        { code: "RAL 5013", name: "Kobalt Mavi", hex: "#1C3355" },
-                        { code: "RAL 5014", name: "Güvercin Mavisi", hex: "#6D7C94" },
-                        { code: "RAL 5015", name: "Gökyüzü Mavisi", hex: "#2271B3" },
-                        { code: "RAL 5017", name: "Trafik Mavisi", hex: "#063971" },
-                        { code: "RAL 5018", name: "Turkuaz Mavi", hex: "#3F888F" },
-                        { code: "RAL 5019", name: "Kapri Mavisi", hex: "#1B5583" },
-                        { code: "RAL 5020", name: "Okyanus Mavisi", hex: "#1D334A" },
-                        { code: "RAL 5021", name: "Su Mavisi", hex: "#256D7B" },
-                        { code: "RAL 5022", name: "Gece Mavisi", hex: "#252850" },
-                        { code: "RAL 5023", name: "Uzak Mavi", hex: "#49678D" },
-                        { code: "RAL 5024", name: "Pastel Mavi", hex: "#5D9B9B" }
-                    ]
-                },
-                {
-                    category: "6000 – Yeşil Tonlar",
-                    colors: [
-                        { code: "RAL 6000", name: "Patina Yeşili", hex: "#327662" },
-                        { code: "RAL 6001", name: "Zümrüt Yeşili", hex: "#2D7932" },
-                        { code: "RAL 6002", name: "Yaprak Yeşili", hex: "#1F5C23" },
-                        { code: "RAL 6003", name: "Zeytin Yeşili", hex: "#424632" },
-                        { code: "RAL 6004", name: "Mavi Yeşil", hex: "#1F3A3D" },
-                        { code: "RAL 6005", name: "Yosun Yeşili", hex: "#2F4538" },
-                        { code: "RAL 6006", name: "Gri Zeytin", hex: "#3E3B32" },
-                        { code: "RAL 6007", name: "Şişe Yeşili", hex: "#343B29" },
-                        { code: "RAL 6009", name: "Köknar Yeşili", hex: "#31372B" },
-                        { code: "RAL 6010", name: "Çimen Yeşili", hex: "#35682D" },
-                        { code: "RAL 6011", name: "Reseda Yeşili", hex: "#587246" },
-                        { code: "RAL 6012", name: "Siyah Yeşil", hex: "#343E40" },
-                        { code: "RAL 6013", name: "Kamış Yeşili", hex: "#6C7156" },
-                        { code: "RAL 6016", name: "Turkuaz Yeşil", hex: "#1E5945" },
-                        { code: "RAL 6017", name: "Mayıs Yeşili", hex: "#4C9141" },
-                        { code: "RAL 6018", name: "Sarı Yeşil", hex: "#57A639" },
-                        { code: "RAL 6019", name: "Pastel Yeşil", hex: "#BDECB6" },
-                        { code: "RAL 6021", name: "Soluk Yeşil", hex: "#89AC76" },
-                        { code: "RAL 6024", name: "Trafik Yeşili", hex: "#308446" },
-                        { code: "RAL 6025", name: "Eğrelti Yeşili", hex: "#3D6B35" },
-                        { code: "RAL 6027", name: "Açık Yeşil", hex: "#83C88D" },
-                        { code: "RAL 6028", name: "Çam Yeşili", hex: "#2C5545" },
-                        { code: "RAL 6029", name: "Nane Yeşili", hex: "#20603D" }
-                    ]
-                },
-                {
-                    category: "7000 – Gri Tonlar",
-                    colors: [
-                        { code: "RAL 7000", name: "Sincap Grisi", hex: "#78858B" },
-                        { code: "RAL 7001", name: "Gümüş Gri", hex: "#8A9597" },
-                        { code: "RAL 7002", name: "Zeytin Grisi", hex: "#7E7B52" },
-                        { code: "RAL 7003", name: "Yosun Grisi", hex: "#6C7059" },
-                        { code: "RAL 7004", name: "Sinyal Grisi", hex: "#969992" },
-                        { code: "RAL 7005", name: "Fare Grisi", hex: "#646B63" },
-                        { code: "RAL 7006", name: "Bej Grisi", hex: "#6D6552" },
-                        { code: "RAL 7008", name: "Haki Grisi", hex: "#6A5F31" },
-                        { code: "RAL 7009", name: "Yeşil Gri", hex: "#4D5645" },
-                        { code: "RAL 7010", name: "Branda Grisi", hex: "#4C514A" },
-                        { code: "RAL 7011", name: "Demir Grisi", hex: "#434B4D" },
-                        { code: "RAL 7012", name: "Bazalt Grisi", hex: "#4E5754" },
-                        { code: "RAL 7015", name: "Arduvaz Grisi", hex: "#434750" },
-                        { code: "RAL 7016", name: "Antrasit Gri", hex: "#293133" },
-                        { code: "RAL 7021", name: "Siyah Gri", hex: "#23282B" },
-                        { code: "RAL 7022", name: "Toprak Grisi", hex: "#332F2C" },
-                        { code: "RAL 7023", name: "Beton Grisi", hex: "#686C5E" },
-                        { code: "RAL 7024", name: "Grafit Grisi", hex: "#474A51" },
-                        { code: "RAL 7026", name: "Granit Grisi", hex: "#2F353B" },
-                        { code: "RAL 7030", name: "Taş Grisi", hex: "#8B8C7A" },
-                        { code: "RAL 7031", name: "Mavi Gri", hex: "#474B4E" },
-                        { code: "RAL 7032", name: "Çakıl Taşı Grisi", hex: "#B8B799" },
-                        { code: "RAL 7033", name: "Çimento Grisi", hex: "#7D8471" },
-                        { code: "RAL 7035", name: "Açık Gri", hex: "#D7D7D7" },
-                        { code: "RAL 7036", name: "Platin Grisi", hex: "#7F7679" },
-                        { code: "RAL 7037", name: "Toz Grisi", hex: "#7D7F7D" },
-                        { code: "RAL 7038", name: "Akik Grisi", hex: "#B5B8B1" },
-                        { code: "RAL 7039", name: "Kuvars Grisi", hex: "#6C6960" },
-                        { code: "RAL 7040", name: "Pencere Grisi", hex: "#9DA1AA" },
-                        { code: "RAL 7042", name: "Trafik Grisi A", hex: "#8D948D" },
-                        { code: "RAL 7043", name: "Trafik Grisi B", hex: "#4E5452" },
-                        { code: "RAL 7044", name: "İpek Grisi", hex: "#CAC4B0" },
-                        { code: "RAL 7045", name: "Telegri 1", hex: "#909090" },
-                        { code: "RAL 7047", name: "Telegri 4", hex: "#D0D0D0" }
-                    ]
-                },
-                {
-                    category: "8000 – Kahverengi Tonlar",
-                    colors: [
-                        { code: "RAL 8000", name: "Yeşil Kahve", hex: "#826C34" },
-                        { code: "RAL 8001", name: "Okr Kahve", hex: "#955F20" },
-                        { code: "RAL 8002", name: "Sinyal Kahve", hex: "#6C3B2A" },
-                        { code: "RAL 8003", name: "Kil Kahve", hex: "#734222" },
-                        { code: "RAL 8004", name: "Bakır Kahve", hex: "#8E402A" },
-                        { code: "RAL 8007", name: "Geyik Kahve", hex: "#59351F" },
-                        { code: "RAL 8008", name: "Zeytin Kahve", hex: "#6F4F28" },
-                        { code: "RAL 8011", name: "Fındık Kahve", hex: "#5B3A29" },
-                        { code: "RAL 8012", name: "Kırmızı Kahve", hex: "#592321" },
-                        { code: "RAL 8014", name: "Sepya Kahve", hex: "#382C1E" },
-                        { code: "RAL 8015", name: "Kestane Kahve", hex: "#633A34" },
-                        { code: "RAL 8016", name: "Maun Kahve", hex: "#4C2F27" },
-                        { code: "RAL 8017", name: "Çikolata Kahve", hex: "#45322E" },
-                        { code: "RAL 8019", name: "Grimsî Kahve", hex: "#403A3A" },
-                        { code: "RAL 8022", name: "Siyah Kahve", hex: "#212121" },
-                        { code: "RAL 8023", name: "Turuncu Kahve", hex: "#A65E2E" },
-                        { code: "RAL 8024", name: "Bej Kahve", hex: "#79553D" },
-                        { code: "RAL 8025", name: "Soluk Kahve", hex: "#755C48" },
-                        { code: "RAL 8028", name: "Terra Kahve", hex: "#4E3B31" }
-                    ]
-                },
-                {
-                    category: "9000 – Siyah & Beyaz",
-                    colors: [
-                        { code: "RAL 9001", name: "Krem Beyaz", hex: "#FDF4E3" },
-                        { code: "RAL 9002", name: "Grimsî Beyaz", hex: "#E7EBDA" },
-                        { code: "RAL 9003", name: "Sinyal Beyazı", hex: "#F4F4F4" },
-                        { code: "RAL 9004", name: "Sinyal Siyahı", hex: "#282828" },
-                        { code: "RAL 9005", name: "Derin Siyah", hex: "#0A0A0A" },
-                        { code: "RAL 9010", name: "Saf Beyaz", hex: "#FFFFFF" },
-                        { code: "RAL 9011", name: "Grafit Siyah", hex: "#1C1C1C" },
-                        { code: "RAL 9016", name: "Trafik Beyazı", hex: "#F6F6F6" },
-                        { code: "RAL 9017", name: "Trafik Siyahı", hex: "#1E1E1E" },
-                        { code: "RAL 9018", name: "Papirüs Beyazı", hex: "#D7D7D7" }
-                    ]
-                },
-                {
-                    category: "✨ Element Metalik Serisi",
-                    colors: [
-                        { code: "RAL 9006", name: "Beyaz Alüminyum", hex: "#A5A5A5", isMetallic: true },
-                        { code: "RAL 9007", name: "Gri Alüminyum", hex: "#8F8F8F", isMetallic: true },
-                        { code: "ME GÜMÜŞ", name: "Gümüş Metalik", hex: "#C0C0C0", isMetallic: true },
-                        { code: "ME ALTIN", name: "Altın Metalik", hex: "#D4AF37", isMetallic: true },
-                        { code: "ME BAKIR", name: "Bakır Metalik", hex: "#B87333", isMetallic: true }
-                    ]
-                }
-            ];
-
-            let currentColorHex = "#0A0A0A"; 
-            let currentColorCode = "RAL 9005"; 
-            let currentIsMetallic = false;
-            // 2 bağımsız boyut: parlaklık + efekt
-            let currentGloss = "parlak";   // parlak | yariparlak | yarimat | mat
-            let currentEffect = "none";    // none | texture | wrinkle
-
-            // Parlaklık profilleri: roughness, clearcoat, env
-            const glossProfiles = {
-                parlak:     { roughness: 0.12, clearcoat: 1.0,  clearcoatRoughness: 0.04, env: 0.35 },
-                yariparlak: { roughness: 0.30, clearcoat: 0.45, clearcoatRoughness: 0.28, env: 0.22 },
-                yarimat:    { roughness: 0.62, clearcoat: 0.0,  clearcoatRoughness: 0.0,  env: 0.10 },
-                mat:        { roughness: 0.88, clearcoat: 0.0,  clearcoatRoughness: 0.0,  env: 0.04 },
-            };
-
-            // Efekt profilleri: bump derinliği (parlaklık üstüne eklenir)
-            const effectBumpScale = {
-                none:    0.006,
-                texture: 0.10,
-                wrinkle: 0.20,
-            };
-
-            const container = document.getElementById('canvas-container');
-            const scene = new THREE.Scene();
-            
-            let initWidth = Math.max(container.clientWidth, 100);
-            let initHeight = Math.max(container.clientHeight, 100);
-
-            const camera = new THREE.PerspectiveCamera(40, initWidth / initHeight, 0.1, 100);
-            camera.position.set(0, 0, 14);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-            renderer.setClearColor(0xffffff, 1);
-            renderer.setSize(initWidth, initHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-            renderer.toneMapping = THREE.LinearToneMapping; 
-            renderer.toneMappingExposure = 1.0;
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.domElement.style.position = "relative";
-            renderer.domElement.style.zIndex = "10";
-            container.appendChild(renderer.domElement);
-
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.minDistance = 6;
-            controls.maxDistance = 25;
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.85); 
-            scene.add(ambientLight);
-
-            const frontLight = new THREE.DirectionalLight(0xffffff, 0.35);
-            frontLight.position.set(2, 5, 10);
-            frontLight.castShadow = true;
-            frontLight.shadow.mapSize.width = 1024;
-            frontLight.shadow.mapSize.height = 1024;
-            frontLight.shadow.bias = -0.0005;
-            scene.add(frontLight);
-
-            let environmentMap = null;
-            try {
-                const pmremGenerator = new THREE.PMREMGenerator(renderer);
-                pmremGenerator.compileEquirectangularShader();
-                environmentMap = pmremGenerator.fromScene(new THREE.RoomEnvironment()).texture;
-                scene.environment = environmentMap;
-            } catch (e) {
-                console.warn("Ortam ışığı oluşturulamadı.");
-            }
-
-            function generatePowderCoatTexture() {
-                const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-                const context = canvas.getContext('2d'); context.fillStyle = '#808080'; context.fillRect(0, 0, 512, 512);
-                const imgData = context.getImageData(0, 0, 512, 512);
-                for (let i = 0; i < imgData.data.length; i += 4) {
-                    const val = 128 + (Math.random() * 20 - 10);
-                    imgData.data[i] = val; imgData.data[i + 1] = val; imgData.data[i + 2] = val; imgData.data[i + 3] = 255;
-                }
-                context.putImageData(imgData, 0, 0);
-                const texture = new THREE.CanvasTexture(canvas);
-                texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(4, 4); texture.minFilter = THREE.LinearMipmapLinearFilter; return texture;
-            }
-
-            function generateMetallicTexture() {
-                const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-                const context = canvas.getContext('2d'); context.fillStyle = '#808080'; context.fillRect(0, 0, 512, 512);
-                const imgData = context.getImageData(0, 0, 512, 512);
-                for (let i = 0; i < imgData.data.length; i += 4) {
-                    let val = 128 + (Math.random() * 20 - 10);
-                    if (Math.random() < 0.08) val = Math.random() > 0.5 ? 255 : 0;
-                    imgData.data[i] = val; imgData.data[i + 1] = val; imgData.data[i + 2] = val; imgData.data[i + 3] = 255;
-                }
-                context.putImageData(imgData, 0, 0);
-                const texture = new THREE.CanvasTexture(canvas);
-                texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(7, 7); texture.minFilter = THREE.LinearMipmapLinearFilter; return texture;
-            }
-
-            // ── Smooth Perlin-benzeri gürültü yardımcıları ──────────────────
-            // Kareleri tamamen ortadan kaldıran gradient-noise (value noise + smooth interpolation)
-            function buildPermTable() {
-                const p = new Uint8Array(256);
-                for (let i = 0; i < 256; i++) p[i] = i;
-                for (let i = 255; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [p[i], p[j]] = [p[j], p[i]];
-                }
-                const perm = new Uint8Array(512);
-                for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
-                return perm;
-            }
-
-            // Quintic easing (Perlin'in orijinal smooth-step'i — kare artefaktı yok eder)
-            function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-            function lerp(a, b, t) { return a + t * (b - a); }
-
-            function grad(hash, x, y) {
-                const h = hash & 3;
-                const u = h < 2 ? x : y;
-                const v = h < 2 ? y : x;
-                return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
-            }
-
-            function perlin2(perm, x, y) {
-                const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
-                const xf = x - Math.floor(x), yf = y - Math.floor(y);
-                const u = fade(xf), v = fade(yf);
-                const aa = perm[perm[xi]     + yi],     ab = perm[perm[xi]     + yi + 1];
-                const ba = perm[perm[xi + 1] + yi],     bb = perm[perm[xi + 1] + yi + 1];
-                return lerp(
-                    lerp(grad(aa, xf, yf),     grad(ba, xf - 1, yf),     u),
-                    lerp(grad(ab, xf, yf - 1), grad(bb, xf - 1, yf - 1), u),
-                    v
-                );
-            }
-
-            // fBm (fractional Brownian motion): octave'leri katmanlayarak organik görünüm
-            function fbm(perm, x, y, octaves, lacunarity, gain) {
-                let val = 0, amp = 0.5, freq = 1, max = 0;
-                for (let o = 0; o < octaves; o++) {
-                    val += perlin2(perm, x * freq, y * freq) * amp;
-                    max += amp;
-                    amp *= gain;
-                    freq *= lacunarity;
-                }
-                return val / max; // normalize [-1, 1]
-            }
-
-            // ── Texture (orange-peel / kum tanesi efekti) ───────────────────
-            function generateTextureEffect() {
-                const size = 512;
-                const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-                const context = canvas.getContext('2d');
-                const imgData = context.createImageData(size, size);
-                const perm = buildPermTable();
-
-                for (let y = 0; y < size; y++) {
-                    for (let x = 0; x < size; x++) {
-                        // Yüksek frekanslı fBm → sık granül, sıfır kare artefaktı
-                        const n = fbm(perm, x / 28, y / 28, 4, 2.1, 0.52);
-                        // [−1,1] → [55, 220]: güçlü kontrast, belirgin granüller
-                        const val = Math.max(0, Math.min(255, Math.round(137 + n * 82)));
-                        const i = (y * size + x) * 4;
-                        imgData.data[i] = val; imgData.data[i+1] = val; imgData.data[i+2] = val; imgData.data[i+3] = 255;
-                    }
-                }
-                context.putImageData(imgData, 0, 0);
-                const texture = new THREE.CanvasTexture(canvas);
-                texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(2.5, 2.5);
-                texture.minFilter = THREE.LinearMipmapLinearFilter;
-                return texture;
-            }
-
-            // ── Wrinkle (kırışık / büyük organik dalgalar) ──────────────────
-            function generateWrinkleEffect() {
-                const size = 512;
-                const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-                const context = canvas.getContext('2d');
-                const imgData = context.createImageData(size, size);
-                const perm = buildPermTable();
-                const perm2 = buildPermTable(); // ikinci permütasyon — domain warping için
-
-                for (let y = 0; y < size; y++) {
-                    for (let x = 0; x < size; x++) {
-                        const nx = x / size, ny = y / size;
-
-                        // Domain warping: koordinatları başka bir noise ile bük →
-                        // kırışık deseni tamamen organik, hiç köşe yok
-                        const warpX = fbm(perm,  nx * 3.5,       ny * 3.5,       3, 2.0, 0.5);
-                        const warpY = fbm(perm2, nx * 3.5 + 5.2, ny * 3.5 + 1.3, 3, 2.0, 0.5);
-
-                        // Warp'lanmış koordinatlarda büyük ölçekli fBm
-                        const scale = 2.8;
-                        const warped = fbm(perm,
-                            (nx + warpX * 0.55) * scale,
-                            (ny + warpY * 0.55) * scale,
-                            3, 2.2, 0.48
-                        );
-
-                        // Keskin kırışık profili: mutlak değer → sırtlar oluşturur
-                        const ridge = 1.0 - Math.abs(warped);
-                        // Güçlü S-eğrisi → sırtları belirginleştir
-                        const shaped = Math.pow(Math.max(0, ridge), 1.6);
-
-                        const val = Math.max(0, Math.min(255, Math.round(shaped * 255)));
-                        const i = (y * size + x) * 4;
-                        imgData.data[i] = val; imgData.data[i+1] = val; imgData.data[i+2] = val; imgData.data[i+3] = 255;
-                    }
-                }
-                context.putImageData(imgData, 0, 0);
-                const texture = new THREE.CanvasTexture(canvas);
-                texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(1.8, 1.8);
-                texture.minFilter = THREE.LinearMipmapLinearFilter;
-                return texture;
-            }
-
-            const bumpTexture = generatePowderCoatTexture();
-            const metallicBumpTexture = generateMetallicTexture();
-            const textureEffectMap = generateTextureEffect();
-            const wrinkleEffectMap = generateWrinkleEffect();
-
-            const shape = new THREE.Shape();
-            const w = 4.5, h = 6.5, r = 0.3; 
-            shape.moveTo(-w/2 + r, -h/2); shape.lineTo(w/2 - r, -h/2); shape.quadraticCurveTo(w/2, -h/2, w/2, -h/2 + r);
-            shape.lineTo(w/2, h/2 - r); shape.quadraticCurveTo(w/2, h/2, w/2 - r, h/2); shape.lineTo(-w/2 + r, h/2);
-            shape.quadraticCurveTo(-w/2, h/2, -w/2, h/2 - r); shape.lineTo(-w/2, -h/2 + r); shape.quadraticCurveTo(-w/2, -h/2, -w/2 + r, -h/2);
-
-            const extrudeSettings = { depth: 0.15, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 };
-            const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-            geometry.center();
-            
-            const material = new THREE.MeshPhysicalMaterial({
-                color: new THREE.Color(currentColorHex), 
-                metalness: 0.05, 
-                roughness: glossProfiles.parlak.roughness,
-                clearcoat: glossProfiles.parlak.clearcoat, 
-                clearcoatRoughness: glossProfiles.parlak.clearcoatRoughness,
-                bumpMap: bumpTexture, 
-                bumpScale: effectBumpScale.none, 
-                envMapIntensity: glossProfiles.parlak.env
-            });
-
-            const plate = new THREE.Mesh(geometry, material);
-            plate.castShadow = true; plate.receiveShadow = true; scene.add(plate);
-
-            const textCanvas = document.createElement('canvas');
-            textCanvas.width = 1024; textCanvas.height = 256;
-            const ctx = textCanvas.getContext('2d');
-            ctx.fillStyle = '#111111'; ctx.font = '900 110px "Inter", Arial, sans-serif';
-            ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText('ELEMENT', 20, 128);
-
-            const textTexture = new THREE.CanvasTexture(textCanvas);
-            textTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-            const textGeo = new THREE.PlaneGeometry(2.2, 0.55);
-            const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true, depthWrite: false, opacity: 0.85 });
-            const textMesh = new THREE.Mesh(textGeo, textMat);
-            textMesh.position.set(-0.8, -2.75, 0.126); plate.add(textMesh);
-
-            const holeGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.3, 16);
-            const holeMat = new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.5, roughness: 0.8});
-            const hole = new THREE.Mesh(holeGeo, holeMat);
-            hole.rotation.x = Math.PI / 2; hole.position.set(0, 2.8, 0); plate.add(hole);
-
-            const categoryContainer = document.getElementById('color-categories');
-            const searchInput = document.getElementById('search-input');
-            const noResults = document.getElementById('no-results');
-
-            function renderColors(filterText = '') {
-                categoryContainer.innerHTML = '';
-                let hasAnyResult = false;
-                const searchTerm = filterText.toLowerCase();
-
-                ralData.forEach((cat, index) => {
-                    const filteredColors = cat.colors.filter(c => c.code.toLowerCase().includes(searchTerm) || c.name.toLowerCase().includes(searchTerm));
-                    if (filteredColors.length === 0) return;
-                    hasAnyResult = true;
-
-                    const catDiv = document.createElement('div');
-                    catDiv.className = 'bg-white rounded-lg border border-gray-200 overflow-hidden';
-                    const isOpen = searchTerm !== '' || index === 0;
-                    const catHeader = document.createElement('button');
-                    catHeader.className = 'w-full text-left px-4 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition flex justify-between items-center text-sm';
-                    catHeader.type = 'button';
-                    catHeader.innerHTML = `${cat.category} <span class="text-xs transition-transform transform ${isOpen ? 'rotate-180' : ''}">▼</span>`;
-                    
-                    const colorsGrid = document.createElement('div');
-                    colorsGrid.className = `p-3 pt-0 grid grid-cols-4 md:grid-cols-5 gap-3 transition-all ${isOpen ? 'block' : 'hidden'}`;
-
-                    catHeader.onclick = () => {
-                        if (colorsGrid.classList.contains('hidden')) { colorsGrid.classList.remove('hidden'); catHeader.querySelector('span').classList.add('rotate-180'); } 
-                        else { colorsGrid.classList.add('hidden'); catHeader.querySelector('span').classList.remove('rotate-180'); }
-                    };
-
-                    filteredColors.forEach(color => {
-                        const colorBtn = document.createElement('button');
-                        colorBtn.type = 'button';
-                        colorBtn.className = `color-swatch w-full aspect-square rounded-md cursor-pointer ${color.code === currentColorCode ? 'active' : ''}`;
-                        colorBtn.style.backgroundColor = color.hex; colorBtn.title = `${color.code} - ${color.name}`;
-                        
-                        if (color.isMetallic) {
-                            const badge = document.createElement('div'); badge.className = 'metallic-badge'; colorBtn.appendChild(badge);
-                        }
-
-                        colorBtn.onclick = () => {
-                            document.querySelectorAll('.color-swatch').forEach(btn => btn.classList.remove('active'));
-                            colorBtn.classList.add('active'); updateColor(color.hex, color.code, color.name, color.isMetallic);
-                        };
-                        colorsGrid.appendChild(colorBtn);
-                    });
-                    catDiv.appendChild(catHeader); catDiv.appendChild(colorsGrid); categoryContainer.appendChild(catDiv);
-                });
-                noResults.style.display = hasAnyResult ? 'none' : 'block';
-            }
-
-            renderColors();
-            searchInput.addEventListener('input', (e) => renderColors(e.target.value));
-
-            const glossLabels = { parlak: 'PARLAK', yariparlak: 'YARI PARLAK', yarimat: 'YARI MAT', mat: 'MAT' };
-
-            function updateOverlay() {
-                document.getElementById('overlay-code').innerText = currentColorCode;
-                document.getElementById('overlay-name').innerText = currentColorName;
-                if (document.getElementById('overlay-hex')) {
-                    document.getElementById('overlay-hex').innerText = currentColorHex.toUpperCase();
-                }
-                document.getElementById('overlay-gloss').innerText = glossLabels[currentGloss] || currentGloss.toUpperCase();
-            }
-
-            let currentColorName = 'Derin Siyah';
-
-            function updateColor(hex, code, name, isMetallic = false) {
-                currentColorHex = hex; currentColorCode = code; currentIsMetallic = isMetallic;
-                currentColorName = name;
-                applyMaterial(); 
-                document.getElementById('current-color-code').innerText = code;
-                document.getElementById('current-color-name').innerText = name;
-                document.getElementById('current-color-preview').style.backgroundColor = hex;
-                const tag = document.getElementById('metallic-tag');
-                if(isMetallic) tag.classList.remove('hidden'); else tag.classList.add('hidden');
-                updateOverlay();
-            }
-
-            // sRGB hex → Three.js Color (linear uzay, gamma=2.2 ile dönüştür)
-            // Böylece plakanın rengi, CSS önizlemesiyle birebir eşleşir
-            function hexToLinearColor(hex) {
-                const r = parseInt(hex.slice(1,3), 16) / 255;
-                const g = parseInt(hex.slice(3,5), 16) / 255;
-                const b = parseInt(hex.slice(5,7), 16) / 255;
-                const toLinear = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-                return new THREE.Color(toLinear(r), toLinear(g), toLinear(b));
-            }
-
-            // applyMaterial: parlaklık × efekt kombinasyonunu materyal olarak uygula
-            function applyMaterial() {
-                const gp = glossProfiles[currentGloss];
-                const hasEffect = currentEffect !== 'none';
-
-                material.color.copy(hexToLinearColor(currentColorHex));
-                material.metalness = currentIsMetallic ? 0.6 : 0.05;
-                material.roughness = currentIsMetallic && currentGloss === "parlak" ? 0.22 : gp.roughness;
-                
-                // Texture/wrinkle efekti aktifken clearcoat ve env yoğunluğunu azalt
-                // Böylece parlak seçilse bile sim/glitter görüntüsü oluşmaz
-                if (hasEffect) {
-                    material.clearcoat = gp.clearcoat * 0.25;
-                    material.clearcoatRoughness = Math.max(gp.clearcoatRoughness, 0.35);
-                    material.envMapIntensity = currentIsMetallic ? 0.5 : Math.min(gp.env, 0.12);
-                } else {
-                    material.clearcoat = gp.clearcoat;
-                    material.clearcoatRoughness = gp.clearcoatRoughness;
-                    material.envMapIntensity = currentIsMetallic ? 1.0 : gp.env;
-                }
-                material.map = null;
-
-                // Efekte göre bump haritası seç
-                if (currentEffect === 'texture') {
-                    material.bumpMap = textureEffectMap;
-                    material.bumpScale = effectBumpScale.texture;
-                } else if (currentEffect === 'wrinkle') {
-                    material.bumpMap = wrinkleEffectMap;
-                    material.bumpScale = effectBumpScale.wrinkle;
-                } else {
-                    material.bumpMap = currentIsMetallic ? metallicBumpTexture : bumpTexture;
-                    material.bumpScale = currentIsMetallic ? effectBumpScale.none * 1.8 : effectBumpScale.none;
-                }
-
-                material.needsUpdate = true;
-            }
-
-            // Parlaklık butonu tıklaması
-            function setGloss(glossType) {
-                currentGloss = glossType;
-                applyMaterial();
-                updateOverlay();
-
-                document.querySelectorAll('.finish-btn').forEach(btn => {
-                    const active = btn.dataset.finish === glossType;
-                    if (active) {
-                        btn.style.backgroundColor = '#2563eb';
-                        btn.style.color = '#ffffff';
-                        btn.style.boxShadow = '0 2px 8px rgba(59,130,246,0.5)';
-                        btn.style.fontWeight = '600';
-                    } else {
-                        btn.style.backgroundColor = '';
-                        btn.style.color = '#6b7280';
-                        btn.style.boxShadow = '';
-                        btn.style.fontWeight = '500';
-                    }
-                });
-            }
-
-            // Efekt butonu tıklaması
-            function setEffect(effectType) {
-                currentEffect = effectType;
-                applyMaterial();
-
-                document.querySelectorAll('.effect-btn').forEach(btn => {
-                    const isActive = btn.dataset.effect === effectType;
-                    if (btn.dataset.effect === 'none') {
-                        btn.className = isActive
-                            ? 'effect-btn active bg-gray-200 shadow text-gray-700 text-xs py-2 px-2 rounded-md transition font-medium flex items-center justify-center gap-1'
-                            : 'effect-btn text-gray-500 hover:text-gray-900 hover:bg-gray-100 text-xs py-2 px-2 rounded-md transition font-medium flex items-center justify-center gap-1';
-                    } else {
-                        btn.className = isActive
-                            ? 'effect-btn active bg-indigo-600 shadow text-white text-xs py-2 px-2 rounded-md transition font-medium flex items-center justify-center gap-1 border border-indigo-400'
-                            : 'effect-btn text-indigo-500 hover:text-white hover:bg-indigo-500 text-xs py-2 px-2 rounded-md transition font-medium flex items-center justify-center gap-1';
-                    }
-                });
-            }
-
-            document.querySelectorAll('.finish-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const b = e.target.closest('button');
-                    if (b) setGloss(b.dataset.finish);
-                });
-            });
-
-            document.querySelectorAll('.effect-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const b = e.target.closest('button');
-                    if (b) setEffect(b.dataset.effect);
-                });
-            });
-
-            document.getElementById('reset-cam').addEventListener('click', (e) => {
-                e.preventDefault();
-                camera.position.set(0, 0, 14); controls.target.set(0,0,0); plate.rotation.set(0,0,0); autoRotate = true; 
-            });
-
-            let autoRotate = true;
-            controls.addEventListener('start', () => { autoRotate = false; }); 
-
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                if (autoRotate) plate.rotation.y += 0.003; 
-                renderer.render(scene, camera);
-            }
-
-            const resizeObserver = new ResizeObserver(() => {
-                if(!container) return;
-                const width = container.clientWidth;
-                const height = container.clientHeight;
-                if(width === 0 || height === 0) return; 
-                camera.aspect = width / height;
-                camera.updateProjectionMatrix();
-                renderer.setSize(width, height);
-            });
-            resizeObserver.observe(container);
-
-            applyMaterial();
-            animate();
-
-            setTimeout(() => {
-                const loader = document.getElementById('loader');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.style.display = 'none', 500);
-                }
-            }, 800);
-
-
-
-        } catch (error) {
-            const errDiv = document.getElementById('error-msg');
-            if (errDiv) {
-                errDiv.innerHTML = "3D Motoru Başlatılamadı.<br>Tarayıcınız veya internet bağlantınız kaynaklı bir sorun olabilir.<br><br>Hata Kodu: " + error.message;
-            }
-            console.error(error);
-        }
-    </script>
+
+<script>
+// ══════════════════════════════════════
+//  RAL DATABASE
+// ══════════════════════════════════════
+const ralColors = {
+  "RAL 1000":{ name:"Green beige",       hex:"#BEBD7F" },
+  "RAL 1001":{ name:"Beige",             hex:"#C2B078" },
+  "RAL 1002":{ name:"Sand yellow",       hex:"#C6A664" },
+  "RAL 1003":{ name:"Signal yellow",     hex:"#E5BE01" },
+  "RAL 1004":{ name:"Golden yellow",     hex:"#CDA434" },
+  "RAL 1005":{ name:"Honey yellow",      hex:"#A98307" },
+  "RAL 1006":{ name:"Maize yellow",      hex:"#E4A010" },
+  "RAL 1007":{ name:"Daffodil yellow",   hex:"#DC9D00" },
+  "RAL 1011":{ name:"Brown beige",       hex:"#8A6642" },
+  "RAL 1012":{ name:"Lemon yellow",      hex:"#C7B446" },
+  "RAL 1013":{ name:"Oyster white",      hex:"#EAE6CA" },
+  "RAL 1014":{ name:"Ivory",             hex:"#E1CC4F" },
+  "RAL 1015":{ name:"Light ivory",       hex:"#E6D690" },
+  "RAL 1016":{ name:"Sulfur yellow",     hex:"#EDFF21" },
+  "RAL 1017":{ name:"Saffron yellow",    hex:"#F5D033" },
+  "RAL 1018":{ name:"Zinc yellow",       hex:"#F8F32B" },
+  "RAL 1019":{ name:"Grey beige",        hex:"#9E9764" },
+  "RAL 1020":{ name:"Olive yellow",      hex:"#999950" },
+  "RAL 1021":{ name:"Rape yellow",       hex:"#F3DA0B" },
+  "RAL 1023":{ name:"Traffic yellow",    hex:"#FAD201" },
+  "RAL 1024":{ name:"Ochre yellow",      hex:"#AEA04B" },
+  "RAL 1026":{ name:"Luminous yellow",   hex:"#FFFF00" },
+  "RAL 1027":{ name:"Curry",             hex:"#9D9101" },
+  "RAL 1028":{ name:"Melon yellow",      hex:"#F4A900" },
+  "RAL 1032":{ name:"Broom yellow",      hex:"#D6AE01" },
+  "RAL 1033":{ name:"Dahlia yellow",     hex:"#F3A505" },
+  "RAL 1034":{ name:"Pastel yellow",     hex:"#EFA94A" },
+  "RAL 2000":{ name:"Yellow orange",     hex:"#DD7907" },
+  "RAL 2001":{ name:"Red orange",        hex:"#BE4E27" },
+  "RAL 2002":{ name:"Vermilion",         hex:"#CB2821" },
+  "RAL 2003":{ name:"Pastel orange",     hex:"#FF7514" },
+  "RAL 2004":{ name:"Pure orange",       hex:"#D45F3C" },
+  "RAL 2007":{ name:"Luminous orange",   hex:"#F77F00" },
+  "RAL 2008":{ name:"Bright red orange", hex:"#E55137" },
+  "RAL 2009":{ name:"Traffic orange",    hex:"#E05929" },
+  "RAL 2010":{ name:"Signal orange",     hex:"#D4652F" },
+  "RAL 2011":{ name:"Deep orange",       hex:"#EC7C26" },
+  "RAL 2012":{ name:"Salmon orange",     hex:"#DB6A50" },
+  "RAL 3000":{ name:"Flame red",         hex:"#AF2B1E" },
+  "RAL 3001":{ name:"Signal red",        hex:"#A52019" },
+  "RAL 3002":{ name:"Carmine red",       hex:"#A2231D" },
+  "RAL 3003":{ name:"Ruby red",          hex:"#9B111E" },
+  "RAL 3004":{ name:"Purple red",        hex:"#75151E" },
+  "RAL 3005":{ name:"Wine red",          hex:"#5E2129" },
+  "RAL 3007":{ name:"Black red",         hex:"#412227" },
+  "RAL 3009":{ name:"Oxide red",         hex:"#642424" },
+  "RAL 3011":{ name:"Brown red",         hex:"#781F19" },
+  "RAL 3012":{ name:"Beige red",         hex:"#C1876B" },
+  "RAL 3013":{ name:"Tomato red",        hex:"#A12312" },
+  "RAL 3014":{ name:"Antique pink",      hex:"#D36E70" },
+  "RAL 3015":{ name:"Light pink",        hex:"#EA899A" },
+  "RAL 3016":{ name:"Coral red",         hex:"#B32821" },
+  "RAL 3017":{ name:"Rose",              hex:"#E63244" },
+  "RAL 3018":{ name:"Strawberry red",    hex:"#D53032" },
+  "RAL 3020":{ name:"Traffic red",       hex:"#CC0605" },
+  "RAL 3022":{ name:"Salmon pink",       hex:"#D95030" },
+  "RAL 3024":{ name:"Luminous red",      hex:"#F80000" },
+  "RAL 3027":{ name:"Raspberry red",     hex:"#C51D34" },
+  "RAL 3031":{ name:"Orient red",        hex:"#AC1922" },
+  "RAL 4001":{ name:"Red lilac",         hex:"#8D4C5B" },
+  "RAL 4002":{ name:"Red violet",        hex:"#922B3E" },
+  "RAL 4003":{ name:"Heather violet",    hex:"#DE4C8A" },
+  "RAL 4004":{ name:"Claret violet",     hex:"#641C34" },
+  "RAL 4005":{ name:"Blue lilac",        hex:"#6C4675" },
+  "RAL 4006":{ name:"Traffic purple",    hex:"#A03472" },
+  "RAL 4007":{ name:"Purple violet",     hex:"#4A192C" },
+  "RAL 4008":{ name:"Signal violet",     hex:"#924E7D" },
+  "RAL 4009":{ name:"Pastel violet",     hex:"#A18594" },
+  "RAL 4010":{ name:"Telemagenta",       hex:"#CF3476" },
+  "RAL 5000":{ name:"Violet blue",       hex:"#354D73" },
+  "RAL 5001":{ name:"Green blue",        hex:"#1F3438" },
+  "RAL 5002":{ name:"Ultramarine blue",  hex:"#20214F" },
+  "RAL 5003":{ name:"Sapphire blue",     hex:"#1D1E33" },
+  "RAL 5004":{ name:"Black blue",        hex:"#18171C" },
+  "RAL 5005":{ name:"Signal blue",       hex:"#1E2460" },
+  "RAL 5007":{ name:"Brilliant blue",    hex:"#3E5F8A" },
+  "RAL 5008":{ name:"Grey blue",         hex:"#26252D" },
+  "RAL 5009":{ name:"Azure blue",        hex:"#025669" },
+  "RAL 5010":{ name:"Gentian blue",      hex:"#0E4D92" },
+  "RAL 5011":{ name:"Steel blue",        hex:"#1B2A4A" },
+  "RAL 5012":{ name:"Light blue",        hex:"#287CB7" },
+  "RAL 5013":{ name:"Cobalt blue",       hex:"#1C3355" },
+  "RAL 5014":{ name:"Pigeon blue",       hex:"#6D7C94" },
+  "RAL 5015":{ name:"Sky blue",          hex:"#2271B3" },
+  "RAL 5017":{ name:"Traffic blue",      hex:"#063971" },
+  "RAL 5018":{ name:"Turquoise blue",    hex:"#3F888F" },
+  "RAL 5019":{ name:"Capri blue",        hex:"#1B5583" },
+  "RAL 5020":{ name:"Ocean blue",        hex:"#1D334A" },
+  "RAL 5021":{ name:"Water blue",        hex:"#256D7B" },
+  "RAL 5022":{ name:"Night blue",        hex:"#252850" },
+  "RAL 5023":{ name:"Distant blue",      hex:"#49678D" },
+  "RAL 5024":{ name:"Pastel blue",       hex:"#5D9B9B" },
+  "RAL 6000":{ name:"Patina green",      hex:"#327662" },
+  "RAL 6001":{ name:"Emerald green",     hex:"#2D7932" },
+  "RAL 6002":{ name:"Leaf green",        hex:"#1F5C23" },
+  "RAL 6003":{ name:"Olive green",       hex:"#424632" },
+  "RAL 6004":{ name:"Blue green",        hex:"#1F3A3D" },
+  "RAL 6005":{ name:"Moss green",        hex:"#2F4538" },
+  "RAL 6006":{ name:"Grey olive",        hex:"#3E3B32" },
+  "RAL 6007":{ name:"Bottle green",      hex:"#343B29" },
+  "RAL 6009":{ name:"Fir green",         hex:"#31372B" },
+  "RAL 6010":{ name:"Grass green",       hex:"#35682D" },
+  "RAL 6011":{ name:"Reseda green",      hex:"#587246" },
+  "RAL 6012":{ name:"Black green",       hex:"#343E40" },
+  "RAL 6013":{ name:"Reed green",        hex:"#6C7156" },
+  "RAL 6016":{ name:"Turquoise green",   hex:"#1E5945" },
+  "RAL 6017":{ name:"May green",         hex:"#4C9141" },
+  "RAL 6018":{ name:"Yellow green",      hex:"#57A639" },
+  "RAL 6019":{ name:"Pastel green",      hex:"#BDECB6" },
+  "RAL 6021":{ name:"Pale green",        hex:"#89AC76" },
+  "RAL 6024":{ name:"Traffic green",     hex:"#308446" },
+  "RAL 6025":{ name:"Fern green",        hex:"#3D6B35" },
+  "RAL 6027":{ name:"Light green",       hex:"#83C88D" },
+  "RAL 6028":{ name:"Pine green",        hex:"#2C5545" },
+  "RAL 6029":{ name:"Mint green",        hex:"#20603D" },
+  "RAL 7000":{ name:"Squirrel grey",     hex:"#78858B" },
+  "RAL 7001":{ name:"Silver grey",       hex:"#8A9597" },
+  "RAL 7002":{ name:"Olive grey",        hex:"#7E7B52" },
+  "RAL 7003":{ name:"Moss grey",         hex:"#6C7059" },
+  "RAL 7004":{ name:"Signal grey",       hex:"#969992" },
+  "RAL 7005":{ name:"Mouse grey",        hex:"#646B63" },
+  "RAL 7006":{ name:"Beige grey",        hex:"#6D6552" },
+  "RAL 7008":{ name:"Khaki grey",        hex:"#6A5F31" },
+  "RAL 7009":{ name:"Green grey",        hex:"#4D5645" },
+  "RAL 7010":{ name:"Tarpaulin grey",    hex:"#4C514A" },
+  "RAL 7011":{ name:"Iron grey",         hex:"#434B4D" },
+  "RAL 7012":{ name:"Basalt grey",       hex:"#4E5754" },
+  "RAL 7015":{ name:"Slate grey",        hex:"#434750" },
+  "RAL 7016":{ name:"Anthracite grey",   hex:"#293133" },
+  "RAL 7021":{ name:"Black grey",        hex:"#23282B" },
+  "RAL 7022":{ name:"Umbra grey",        hex:"#332F2C" },
+  "RAL 7023":{ name:"Concrete grey",     hex:"#686C5E" },
+  "RAL 7024":{ name:"Graphite grey",     hex:"#474A51" },
+  "RAL 7026":{ name:"Granite grey",      hex:"#2F353B" },
+  "RAL 7030":{ name:"Stone grey",        hex:"#8B8C7A" },
+  "RAL 7031":{ name:"Blue grey",         hex:"#474B4E" },
+  "RAL 7032":{ name:"Pebble grey",       hex:"#B8B799" },
+  "RAL 7033":{ name:"Cement grey",       hex:"#7D8471" },
+  "RAL 7035":{ name:"Light grey",        hex:"#D7D7D7" },
+  "RAL 7036":{ name:"Platinum grey",     hex:"#7F7679" },
+  "RAL 7037":{ name:"Dusty grey",        hex:"#7D7F7D" },
+  "RAL 7038":{ name:"Agate grey",        hex:"#B5B8B1" },
+  "RAL 7039":{ name:"Quartz grey",       hex:"#6C6960" },
+  "RAL 7040":{ name:"Window grey",       hex:"#9DA1AA" },
+  "RAL 7042":{ name:"Traffic grey A",    hex:"#8D948D" },
+  "RAL 7043":{ name:"Traffic grey B",    hex:"#4E5452" },
+  "RAL 7044":{ name:"Silk grey",         hex:"#CAC4B0" },
+  "RAL 7045":{ name:"Telegrey 1",        hex:"#909090" },
+  "RAL 7047":{ name:"Telegrey 4",        hex:"#D0D0D0" },
+  "RAL 8000":{ name:"Green brown",       hex:"#826C34" },
+  "RAL 8001":{ name:"Ochre brown",       hex:"#955F20" },
+  "RAL 8002":{ name:"Signal brown",      hex:"#6C3B2A" },
+  "RAL 8003":{ name:"Clay brown",        hex:"#734222" },
+  "RAL 8004":{ name:"Copper brown",      hex:"#8E402A" },
+  "RAL 8007":{ name:"Fawn brown",        hex:"#59351F" },
+  "RAL 8008":{ name:"Olive brown",       hex:"#6F4F28" },
+  "RAL 8011":{ name:"Nut brown",         hex:"#5B3A29" },
+  "RAL 8012":{ name:"Red brown",         hex:"#592321" },
+  "RAL 8014":{ name:"Sepia brown",       hex:"#382C1E" },
+  "RAL 8015":{ name:"Chestnut brown",    hex:"#633A34" },
+  "RAL 8016":{ name:"Mahogany brown",    hex:"#4C2F27" },
+  "RAL 8017":{ name:"Chocolate brown",   hex:"#45322E" },
+  "RAL 8019":{ name:"Grey brown",        hex:"#403A3A" },
+  "RAL 8022":{ name:"Black brown",       hex:"#212121" },
+  "RAL 8023":{ name:"Orange brown",      hex:"#A65E2E" },
+  "RAL 8024":{ name:"Beige brown",       hex:"#79553D" },
+  "RAL 8025":{ name:"Pale brown",        hex:"#755C48" },
+  "RAL 8028":{ name:"Terra brown",       hex:"#4E3B31" },
+  "RAL 9001":{ name:"Cream",             hex:"#FDF4E3" },
+  "RAL 9002":{ name:"Grey white",        hex:"#E7EBDA" },
+  "RAL 9003":{ name:"Signal white",      hex:"#F4F4F4" },
+  "RAL 9004":{ name:"Signal black",      hex:"#282828" },
+  "RAL 9005":{ name:"Jet black",         hex:"#0A0A0A" },
+  "RAL 9006":{ name:"White aluminium",   hex:"#A5A5A5" },
+  "RAL 9007":{ name:"Grey aluminium",    hex:"#8F8F8F" },
+  "RAL 9010":{ name:"Pure white",        hex:"#FFFFFF" },
+  "RAL 9011":{ name:"Graphite black",    hex:"#1C1C1C" },
+  "RAL 9016":{ name:"Traffic white",     hex:"#F6F6F6" },
+  "RAL 9017":{ name:"Traffic black",     hex:"#1E1E1E" },
+  "RAL 9018":{ name:"Papyrus white",     hex:"#D7D7D7" },
+};
+
+const groups = {
+  "1000 – Sarı":       Object.keys(ralColors).filter(k=>k.startsWith("RAL 1")),
+  "2000 – Turuncu":    Object.keys(ralColors).filter(k=>k.startsWith("RAL 2")),
+  "3000 – Kırmızı":   Object.keys(ralColors).filter(k=>k.startsWith("RAL 3")),
+  "4000 – Mor":        Object.keys(ralColors).filter(k=>k.startsWith("RAL 4")),
+  "5000 – Mavi":       Object.keys(ralColors).filter(k=>k.startsWith("RAL 5")),
+  "6000 – Yeşil":      Object.keys(ralColors).filter(k=>k.startsWith("RAL 6")),
+  "7000 – Gri":        Object.keys(ralColors).filter(k=>k.startsWith("RAL 7")),
+  "8000 – Kahverengi": Object.keys(ralColors).filter(k=>k.startsWith("RAL 8")),
+  "9000 – Nötr":       Object.keys(ralColors).filter(k=>k.startsWith("RAL 9")),
+};
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let currentRal   = "RAL 2004";
+let currentColor = "#D45F3C";
+let finish       = "glossy";
+
+const finishLabels = {
+  "glossy":      "✦ Parlak",
+  "semi-glossy": "◈ Yarı-Parlak",
+  "semi-matte":  "◇ Yarı-Mat",
+  "matte":       "○ Mat",
+};
+
+// Phong parameters per finish
+const FINISH_PARAMS = {
+  "glossy":      { specPow: 100, specInt: 1.00, ambient: 0.14, diffuse: 0.86 },
+  "semi-glossy": { specPow: 28,  specInt: 0.48, ambient: 0.20, diffuse: 0.80 },
+  "semi-matte":  { specPow: 7,   specInt: 0.14, ambient: 0.26, diffuse: 0.70 },
+  "matte":       { specPow: 0,   specInt: 0.00, ambient: 0.32, diffuse: 0.62 },
+};
+
+// ══════════════════════════════════════
+//  SIDEBAR
+// ══════════════════════════════════════
+function buildColorGroups(filter='') {
+  const container = document.getElementById('colorGroups');
+  container.innerHTML = '';
+  const q = filter.trim().toLowerCase();
+
+  for (const [gName, keys] of Object.entries(groups)) {
+    const visible = keys.filter(k =>
+      !q || k.toLowerCase().includes(q) || ralColors[k].name.toLowerCase().includes(q)
+    );
+    if (!visible.length) continue;
+
+    const title = document.createElement('div');
+    title.className = 'group-title';
+    title.textContent = gName;
+    container.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'color-grid';
+
+    visible.forEach(ral => {
+      const chip = document.createElement('div');
+      chip.className = 'color-chip' + (ral === currentRal ? ' selected' : '');
+      chip.style.background = ralColors[ral].hex;
+      chip.dataset.ral = ral;
+
+      const tip = document.createElement('div');
+      tip.className = 'chip-tooltip';
+      tip.textContent = `${ral} · ${ralColors[ral].name}`;
+      chip.appendChild(tip);
+
+      chip.addEventListener('click', () => selectColor(ral));
+      grid.appendChild(chip);
+    });
+
+    container.appendChild(grid);
+  }
+}
+
+// ══════════════════════════════════════
+//  SELECT COLOR → updates both panels
+// ══════════════════════════════════════
+function selectColor(ral) {
+  currentRal   = ral;
+  currentColor = ralColors[ral].hex;
+
+  document.getElementById('bigCode').textContent = ral;
+  document.getElementById('bigCode').style.color  = currentColor;
+  document.getElementById('bigName').textContent  = ralColors[ral].name;
+  document.getElementById('hexVal').textContent   = ralColors[ral].hex.toUpperCase();
+
+  document.querySelectorAll('.color-chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.ral === ral);
+  });
+
+  applyFlatSurface();
+  drawSphere();
+}
+
+// ══════════════════════════════════════
+//  FLAT SURFACE
+// ══════════════════════════════════════
+function applyFlatSurface() {
+  const flat = document.getElementById('flatSurface');
+  flat.style.backgroundColor = currentColor;
+  flat.className = 'flat-surface f-' + finish;
+}
+
+// ══════════════════════════════════════
+//  SET FINISH
+// ══════════════════════════════════════
+function setFinish(f) {
+  finish = f;
+  ['glossy','semi-glossy','semi-matte','matte'].forEach(id => {
+    document.getElementById('btn-'+id).classList.toggle('active', id === f);
+  });
+  document.getElementById('finishBadge').textContent = finishLabels[f];
+  applyFlatSurface();
+  drawSphere();
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  buildColorGroups(e.target.value);
+});
+
+// ══════════════════════════════════════
+//  SPHERE RENDERER — clean Blinn-Phong
+// ══════════════════════════════════════
+const canvas = document.getElementById('ralCanvas');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const SPH_R = 158;
+const SCX = W/2, SCY = H/2;
+
+// Fixed key light in view space
+const LX = 0.50, LY = -0.65, LZ = 0.57;
+const lm = Math.sqrt(LX*LX+LY*LY+LZ*LZ);
+const LIGHT = { x:LX/lm, y:LY/lm, z:LZ/lm };
+
+// Secondary fill light (soft, opposite side)
+const FX = -0.30, FY = 0.20, FZ = 0.50;
+const fm = Math.sqrt(FX*FX+FY*FY+FZ*FZ);
+const FILL  = { x:FX/fm, y:FY/fm, z:FZ/fm };
+
+function hexToRgb(h) {
+  return { r:parseInt(h.slice(1,3),16), g:parseInt(h.slice(3,5),16), b:parseInt(h.slice(5,7),16) };
+}
+
+const imgData = ctx.createImageData(W, H);
+
+function drawSphere() {
+  const rgb = hexToRgb(currentColor);
+  const fp  = FINISH_PARAMS[finish];
+  const data = imgData.data;
+
+  for (let py=0; py<H; py++) {
+    for (let px=0; px<W; px++) {
+      const idx = (py*W + px)*4;
+      const dx = px - SCX, dy = py - SCY;
+      const d2 = dx*dx + dy*dy;
+
+      if (d2 >= SPH_R*SPH_R) {
+        data[idx+3] = 0;
+        continue;
+      }
+
+      // View-space normal — perfectly smooth sphere
+      const dz = Math.sqrt(SPH_R*SPH_R - d2);
+      const nx = dx/SPH_R, ny = dy/SPH_R, nz = dz/SPH_R;
+
+      // Key light diffuse
+      const diffKey  = Math.max(0, nx*LIGHT.x + ny*LIGHT.y + nz*LIGHT.z);
+      // Fill light (dimmer)
+      const diffFill = Math.max(0, nx*FILL.x  + ny*FILL.y  + nz*FILL.z) * 0.20;
+
+      // Total diffuse
+      const diff = diffKey * fp.diffuse + diffFill;
+
+      // Blinn-Phong specular (key light only)
+      let spec = 0;
+      if (fp.specInt > 0 && diffKey > 0) {
+        // halfway vector between key light and view direction (0,0,1)
+        const hx = LIGHT.x, hy = LIGHT.y, hz = LIGHT.z + 1.0;
+        const hl = Math.sqrt(hx*hx+hy*hy+hz*hz);
+        const nh = nx*(hx/hl) + ny*(hy/hl) + nz*(hz/hl);
+        spec = Math.pow(Math.max(0, nh), fp.specPow) * fp.specInt;
+      }
+
+      // Rim / edge darkening (makes it look more spherical)
+      const rim = 1.0 - Math.pow(1.0 - nz, 2.2) * 0.55;
+
+      const bright = (fp.ambient + diff) * rim;
+
+      let r = rgb.r * bright + spec * 255;
+      let g = rgb.g * bright + spec * 255;
+      let b = rgb.b * bright + spec * 255;
+
+      data[idx]   = Math.min(255, Math.round(r));
+      data[idx+1] = Math.min(255, Math.round(g));
+      data[idx+2] = Math.min(255, Math.round(b));
+      data[idx+3] = 255;
+    }
+  }
+
+  ctx.clearRect(0,0,W,H);
+  ctx.putImageData(imgData, 0, 0);
+
+  // Ground shadow (Açık tema için biraz yumuşatıldı)
+  ctx.save();
+  const sy = SCY + SPH_R + 14;
+  const sg = ctx.createRadialGradient(SCX, sy, 4, SCX, sy, SPH_R*0.6);
+  sg.addColorStop(0,'rgba(0,0,0,0.15)');
+  sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.scale(1, 0.25);
+  ctx.beginPath();
+  ctx.arc(SCX, sy/0.25, SPH_R*0.6, 0, Math.PI*2);
+  ctx.fillStyle = sg;
+  ctx.fill();
+  ctx.restore();
+}
+
+// ── Rotation & drag ──
+let rotX=0, rotY=0; 
+let isDragging=false, lastMX=0, lastMY=0;
+let autoSpin=true;
+let lightOffsetY = 0;
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = true; autoSpin = false;
+  lastMX = e.clientX; lastMY = e.clientY;
+  canvas.style.cursor = 'grabbing';
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  lightOffsetY += (e.clientX - lastMX) * 0.015;
+  lastMX = e.clientX; lastMY = e.clientY;
+  applyLightOffset();
+  drawSphere();
+});
+window.addEventListener('mouseup', () => { isDragging = false; canvas.style.cursor='grab'; });
+
+canvas.addEventListener('touchstart', e=>{
+  isDragging=true; autoSpin=false;
+  lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
+},{passive:true});
+canvas.addEventListener('touchmove', e=>{
+  if(!isDragging)return; e.preventDefault();
+  lightOffsetY += (e.touches[0].clientX - lastMX)*0.015;
+  lastMX=e.touches[0].clientX; lastMY=e.touches[0].clientY;
+  applyLightOffset(); drawSphere();
+},{passive:false});
+canvas.addEventListener('touchend',()=>{ isDragging=false; });
+
+function applyLightOffset() {
+  const c = Math.cos(lightOffsetY), s = Math.sin(lightOffsetY);
+  const ox = LX/lm, oz = LZ/lm;
+  LIGHT.x =  ox*c + oz*s;
+  LIGHT.z = -ox*s + oz*c;
+}
+
+function loop() {
+  if (autoSpin) {
+    lightOffsetY += 0.006;
+    applyLightOffset();
+    drawSphere();
+  }
+  requestAnimationFrame(loop);
+}
+
+// ── INIT ──
+buildColorGroups();
+selectColor('RAL 2004');
+loop();
+</script>
 </body>
 </html>
