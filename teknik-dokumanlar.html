@@ -24,8 +24,36 @@
     <a href="https://shopelementboya.com/" target="_blank" rel="noopener">E-Store</a>
   </div>
 </header>
-<section class="page-hero"><div class="container split-grid"><div><div class="breadcrumb"><span>Anasayfa</span><span>/</span><span>Teknik Dokümanlar</span></div><h1>Teknik Doküman Merkezi</h1><p>Katalog, teknik veri sayfası ve güvenlik bilgi formu dosyalarına tek noktadan erişim sağlayan düzenli doküman alanı.</p></div><div class="page-banner"><img src="assets/images/page-banner.svg" alt="Teknik doküman banner"></div></div></section>
-<section class="section"><div class="container"><h2 class="section-title">Doküman listesi</h2><p class="section-lead">Satış ve teknik ekiplerin en sık ihtiyaç duyduğu belgeler ürün bazında gruplandırılmıştır.</p><div class="notice">Buradaki PDF bağlantıları örnek amaçlıdır. Kendi katalog, TDS ve SDS dosyalarınızı aynı klasör yapısı ile kolayca değiştirebilirsiniz.</div><div id="docs-table-wrap" style="margin-top:24px"></div></div></section>
+<section class="page-hero">
+  <div class="container split-grid">
+    <div>
+      <div class="breadcrumb"><span>Anasayfa</span><span>/</span><span>Teknik Dokümanlar</span></div>
+      <h1>Teknik Dokümanlar</h1>
+      <p>Ürün bazlı katalog, teknik veri sayfası ve güvenlik bilgi formlarını tek merkezden yönetin. Yeni bir doküman eklemek için PDF dosyasını assets/docs klasörüne atıp docs.js listesine eklemeniz yeterlidir.</p>
+      <div class="notice">Bu paket içindeki PDF dosyaları örnek bağlantılardır. Kendi gerçek katalog ve teknik belgelerinizle kolayca değiştirebilirsiniz.</div>
+    </div>
+    <div class="page-banner"><img src="assets/images/sector-industry.svg" alt="Teknik dokümanlar banner"></div>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="filters">
+      <input class="search" id="docSearch" type="search" placeholder="Doküman ara...">
+      <select class="select" id="docType">
+        <option value="">Tüm tipler</option>
+        <option value="Katalog">Katalog</option>
+        <option value="TDS">TDS</option>
+        <option value="SDS">SDS</option>
+      </select>
+    </div>
+    <table class="docs-table">
+      <thead>
+        <tr><th>Doküman</th><th>Tip</th><th>Ürün</th><th>Dil</th><th>İşlem</th></tr>
+      </thead>
+      <tbody id="docs-body"></tbody>
+    </table>
+  </div>
+</section>
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
