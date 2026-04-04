@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#172033"/>
+        <stop offset="100%" stop-color="#1f2937"/>
+      </linearGradient>
+      <linearGradient id="a" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#F97316"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0.15"/>
+      </linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#g)"/>
+    <circle cx="1260" cy="180" r="220" fill="#F97316" fill-opacity="0.18"/>
+    <circle cx="1360" cy="680" r="260" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="90" y="110" width="12" height="620" rx="6" fill="#F97316"/>
+    <rect x="130" y="130" width="520" height="14" rx="7" fill="#F97316" fill-opacity="0.65"/>
+    <rect x="130" y="170" width="760" height="120" rx="24" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="130" y="320" width="620" height="70" rx="18" fill="#ffffff" fill-opacity="0.05"/>
+    <rect x="130" y="420" width="290" height="110" rx="24" fill="#ffffff" fill-opacity="0.06"/>
+    <rect x="450" y="420" width="290" height="110" rx="24" fill="#ffffff" fill-opacity="0.06"/>
+    <path d="M1030 250 C1110 170 1240 170 1320 250 S1530 330 1510 480" fill="none" stroke="#F97316" stroke-width="14" stroke-linecap="round" stroke-opacity="0.8"/>
+    <path d="M985 560 C1090 480 1220 500 1310 620 S1460 760 1510 700" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-opacity="0.22"/>
+    <text x="130" y="245" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="700" fill="#ffffff">Metal Mobilya</text>
+    <text x="130" y="368" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#d1d5db">İç mekan çözümleri</text>
+    <text x="130" y="485" font-family="Arial, Helvetica, sans-serif" font-size="26" fill="#ffffff">Kolayca degistirilebilir gorsel yer tutucu</text>
+    <text x="130" y="525" font-family="Arial, Helvetica, sans-serif" font-size="22" fill="#9ca3af">assets/images klasorunden dilediginiz gorselle degistirin</text>
+    </svg>

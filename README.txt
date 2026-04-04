@@ -1,0 +1,1 @@
+Bu sürümde Element Boya logosu eklendi, üst menüde görünen tekrar satırı kaldırıldı, sayfa metinleri toz boya odaklı içeriklerle güncellendi ve görsel alanlar Qemtex benzeri modern bir dilde yeniden tasarlandı. assets/images içindeki görselleri daha sonra kendi fotoğraflarınızla değiştirebilirsiniz.
