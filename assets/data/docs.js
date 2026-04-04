@@ -9,4 +9,5 @@ window.ELEMENT_DOCS = [
   { title: "Epoksi Polyester Güvenlik Bilgi Formu", type: "SDS", product: "Epoksi Polyester", lang: "TR", file: "sds-hybrid.pdf" },
   { title: "Epoksi Güvenlik Bilgi Formu", type: "SDS", product: "Epoksi", lang: "TR", file: "sds-epoxy.pdf" },
   { title: "Genel Güvenlik Bilgi Formu", type: "SDS", product: "Genel", lang: "TR", file: "sds-general.pdf" }
+  { title: "ELM HYB22 Teknik Veri Sayfası", type: "TDS", product: "Epkoksi Poliester", lang: "TR", file: "ELMHYB22_TR.pdf" }
 ];
