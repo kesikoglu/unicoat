@@ -1,6 +1,20 @@
-<!DOCTYPE html><html lang="tr"><head><title>Teknik Dokümanlar - Element Boya</title><meta name="description" content="Element Boya katalog, teknik veri sayfası ve SDS bağlantıları"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#ffffff"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/css/styles.css"></head><body><header class="site-header">
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<title>Teknik Dokümanlar - Element Boya</title>
+<meta name="description" content="Element Boya teknik doküman sistemi">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111827">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<header class="site-header">
   <div class="container navbar">
-    <a class="logo" href="index.html" aria-label="Element Boya Ana Sayfa"><img src="assets/images/element-logo.webp" alt="Element Boya logosu"></a>
+    <a class="logo" href="index.html"><span class="logo-badge">E</span><span>Element Boya</span></a>
     <nav class="nav-links">
       <a href="index.html">Anasayfa</a>
       <a href="urunler.html">Ürünler</a>
@@ -24,14 +38,44 @@
     <a href="https://shopelementboya.com/" target="_blank" rel="noopener">E-Store</a>
   </div>
 </header>
-<section class="page-hero"><div class="container split-grid"><div><div class="breadcrumb"><span>Anasayfa</span><span>/</span><span>Teknik Dokümanlar</span></div><h1>Teknik Doküman Merkezi</h1><p>Katalog, teknik veri sayfası ve güvenlik bilgi formu dosyalarına tek noktadan erişim sağlayan düzenli doküman alanı.</p></div><div class="page-banner"><img src="assets/images/page-banner.svg" alt="Teknik doküman banner"></div></div></section>
-<section class="section"><div class="container"><h2 class="section-title">Doküman listesi</h2><p class="section-lead">Satış ve teknik ekiplerin en sık ihtiyaç duyduğu belgeler ürün bazında gruplandırılmıştır.</p><div class="notice">Buradaki PDF bağlantıları örnek amaçlıdır. Kendi katalog, TDS ve SDS dosyalarınızı aynı klasör yapısı ile kolayca değiştirebilirsiniz.</div><div id="docs-table-wrap" style="margin-top:24px"></div></div></section>
+
+<section class="page-hero">
+  <div class="container split-grid">
+    <div>
+      <div class="breadcrumb"><span>Anasayfa</span><span>/</span><span>Teknik Dokümanlar</span></div>
+      <h1>Teknik Dokümanlar</h1>
+      <p>Ürün bazlı katalog, teknik veri sayfası ve güvenlik bilgi formlarını tek merkezden yönetin. Yeni bir doküman eklemek için PDF dosyasını assets/docs klasörüne atıp docs.js listesine eklemeniz yeterlidir.</p>
+      <div class="notice">Bu paket içindeki PDF dosyaları örnek bağlantılardır. Kendi gerçek katalog ve teknik belgelerinizle kolayca değiştirebilirsiniz.</div>
+    </div>
+    <div class="page-banner"><img src="assets/images/sector-industry.svg" alt="Teknik dokümanlar banner"></div>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="filters">
+      <input class="search" id="docSearch" type="search" placeholder="Doküman ara...">
+      <select class="select" id="docType">
+        <option value="">Tüm tipler</option>
+        <option value="Katalog">Katalog</option>
+        <option value="TDS">TDS</option>
+        <option value="SDS">SDS</option>
+      </select>
+    </div>
+    <table class="docs-table">
+      <thead>
+        <tr><th>Doküman</th><th>Tip</th><th>Ürün</th><th>Dil</th><th>İşlem</th></tr>
+      </thead>
+      <tbody id="docs-body"></tbody>
+    </table>
+  </div>
+</section>
+
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="logo logo-footer" style="margin-bottom:14px"><img src="assets/images/element-logo.webp" alt="Element Boya logosu"></div>
-        <p>Element Boya; polyester, epoksi polyester, epoksi ve özel efekt serileriyle endüstriyel kaplama ihtiyaçlarına yönelik çözümler sunar. Bu sitedeki görsel alanları ve doküman bağlantılarını daha sonra kendi içeriklerinizle kolayca güncelleyebilirsiniz.</p>
+        <div class="logo" style="margin-bottom:14px"><span class="logo-badge">E</span><span>Element Boya</span></div>
+        <p>Element Boya için hazırlanmış modern çok sayfalı statik site paketi. Metinler, görseller ve PDF dokümanlar klasör yapısı üzerinden kolayca güncellenebilir.</p>
       </div>
       <div>
         <h4>Hızlı Erişim</h4>
@@ -51,10 +95,16 @@
       </div>
       <div>
         <h4>E-Store</h4>
-        <p>Kurumsal siteden ürünleri inceleyen müşterilerinizi tek tıkla online mağazanıza yönlendirin.</p>
+        <p>Müşterileriniz ürünleri inceleyip doğrudan online mağazaya geçebilir.</p>
         <a class="btn btn-primary" href="https://shopelementboya.com/" target="_blank" rel="noopener">shopelementboya.com</a>
       </div>
     </div>
-    <div class="footer-bottom">© <span data-year></span> Element Boya. Tüm hakları saklıdır.</div>
+    <div class="footer-bottom">© <span data-year></span> Element Boya. Final içerikler bu paket içine işlenmiştir.</div>
   </div>
-</footer><script src="assets/data/products.js"></script><script src="assets/data/docs.js"></script><script src="assets/data/ral-colors.js"></script><script src="assets/js/app.js"></script></body></html>
+</footer>
+<script src="assets/data/products.js"></script>
+<script src="assets/data/docs.js"></script>
+<script src="assets/data/ral-colors.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
